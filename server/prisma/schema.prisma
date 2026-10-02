@@ -1,0 +1,61 @@
+// Prisma Schema for ClientFlow
+// Business Enquiry & Client Request Management System
+//
+// NOTE FOR PRODUCTION DEPLOYMENT:
+// To deploy to cloud PostgreSQL providers (Render, Railway, Supabase, Neon):
+// Change `provider = "sqlite"` below to `provider = "postgresql"`
+// and update `DATABASE_URL` in `.env` to your PostgreSQL connection string.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("ADMIN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  enquiries  Enquiry[]  @relation("AssignedEnquiries")
+  activities Activity[]
+}
+
+model Enquiry {
+  id            String    @id @default(uuid())
+  clientName    String
+  contactPerson String
+  email         String
+  phone         String
+  source        String
+  service       String
+  description   String?
+  budget        Float?    @default(0)
+  status        String    @default("NEW")
+  assignedTo    String?
+  assignedUser  User?     @relation("AssignedEnquiries", fields: [assignedTo], references: [id], onDelete: SetNull)
+  followUpDate  DateTime?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  activities Activity[]
+}
+
+model Activity {
+  id          String   @id @default(uuid())
+  enquiryId   String
+  enquiry     Enquiry  @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action      String
+  description String
+  createdAt   DateTime @default(now())
+}
